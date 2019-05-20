@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,8 +37,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.samples.petclinic.model.Specialty;
+import org.springframework.samples.petclinic.service.SpecialtyService;
 import org.springframework.samples.petclinic.service.clinicService.ApplicationTestConfig;
-import org.springframework.samples.petclinic.service.ClinicService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -62,7 +63,7 @@ public class SpecialtyRestControllerTests {
     private SpecialtyRestController specialtyRestController;
 
 	@MockBean
-    private ClinicService clinicService;
+    private SpecialtyService specialtyService;
 
     private MockMvc mockMvc;
 
@@ -73,7 +74,7 @@ public class SpecialtyRestControllerTests {
     	this.mockMvc = MockMvcBuilders.standaloneSetup(specialtyRestController)
     			.setControllerAdvice(new ExceptionControllerAdvice())
     			.build();
-    	specialties = new ArrayList<Specialty>();
+    	specialties = new ArrayList<>();
 
     	Specialty specialty = new Specialty();
     	specialty.setId(1);
@@ -95,7 +96,7 @@ public class SpecialtyRestControllerTests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     public void testGetSpecialtySuccess() throws Exception {
-    	given(this.clinicService.findSpecialtyById(1)).willReturn(specialties.get(0));
+    	given(this.specialtyService.findSpecialtyById(1)).willReturn(Optional.ofNullable(specialties.get(0)));
         this.mockMvc.perform(get("/api/specialties/1")
         	.accept(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
@@ -107,7 +108,7 @@ public class SpecialtyRestControllerTests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     public void testGetSpecialtyNotFound() throws Exception {
-    	given(this.clinicService.findSpecialtyById(-1)).willReturn(null);
+    	given(this.specialtyService.findSpecialtyById(-1)).willReturn(null);
         this.mockMvc.perform(get("/api/specialties/-1")
         	.accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -117,7 +118,7 @@ public class SpecialtyRestControllerTests {
     @WithMockUser(roles="VET_ADMIN")
     public void testGetAllSpecialtysSuccess() throws Exception {
     	specialties.remove(0);
-    	given(this.clinicService.findAllSpecialties()).willReturn(specialties);
+    	given(this.specialtyService.findAllSpecialties()).willReturn(specialties);
         this.mockMvc.perform(get("/api/specialties/")
         	.accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -132,7 +133,7 @@ public class SpecialtyRestControllerTests {
     @WithMockUser(roles="VET_ADMIN")
     public void testGetAllSpecialtysNotFound() throws Exception {
     	specialties.clear();
-    	given(this.clinicService.findAllSpecialties()).willReturn(specialties);
+    	given(this.specialtyService.findAllSpecialties()).willReturn(specialties);
         this.mockMvc.perform(get("/api/specialties/")
         	.accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -166,7 +167,7 @@ public class SpecialtyRestControllerTests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     public void testUpdateSpecialtySuccess() throws Exception {
-    	given(this.clinicService.findSpecialtyById(2)).willReturn(specialties.get(1));
+    	given(this.specialtyService.findSpecialtyById(2)).willReturn(Optional.ofNullable(specialties.get(1)));
     	Specialty newSpecialty = specialties.get(1);
     	newSpecialty.setName("surgery I");
     	ObjectMapper mapper = new ObjectMapper();
@@ -202,7 +203,7 @@ public class SpecialtyRestControllerTests {
     	Specialty newSpecialty = specialties.get(0);
     	ObjectMapper mapper = new ObjectMapper();
     	String newSpecialtyAsJSON = mapper.writeValueAsString(newSpecialty);
-    	given(this.clinicService.findSpecialtyById(1)).willReturn(specialties.get(0));
+    	given(this.specialtyService.findSpecialtyById(1)).willReturn(Optional.ofNullable(specialties.get(0)));
     	this.mockMvc.perform(delete("/api/specialties/1")
     		.content(newSpecialtyAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(status().isNoContent());
@@ -214,7 +215,7 @@ public class SpecialtyRestControllerTests {
     	Specialty newSpecialty = specialties.get(0);
     	ObjectMapper mapper = new ObjectMapper();
     	String newSpecialtyAsJSON = mapper.writeValueAsString(newSpecialty);
-    	given(this.clinicService.findSpecialtyById(-1)).willReturn(null);
+    	given(this.specialtyService.findSpecialtyById(-1)).willReturn(null);
     	this.mockMvc.perform(delete("/api/specialties/-1")
     		.content(newSpecialtyAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(status().isNotFound());

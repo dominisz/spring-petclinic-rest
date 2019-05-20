@@ -184,37 +184,6 @@ public class ClinicServiceImpl implements ClinicService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Specialty findSpecialtyById(int specialtyId) {
-		Specialty specialty = null;
-		try {
-			specialty = specialtyRepository.findById(specialtyId);
-		} catch (ObjectRetrievalFailureException|EmptyResultDataAccessException e) {
-		// just ignore not found exceptions for Jdbc/Jpa realization
-			return null;
-		}
-		return specialty;
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public Collection<Specialty> findAllSpecialties() throws DataAccessException {
-		return specialtyRepository.findAll();
-	}
-
-	@Override
-	@Transactional
-	public void saveSpecialty(Specialty specialty) throws DataAccessException {
-		specialtyRepository.save(specialty);
-	}
-
-	@Override
-	@Transactional
-	public void deleteSpecialty(Specialty specialty) throws DataAccessException {
-		specialtyRepository.delete(specialty);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
 	public Collection<PetType> findPetTypes() throws DataAccessException {
 		return petRepository.findPetTypes();
 	}

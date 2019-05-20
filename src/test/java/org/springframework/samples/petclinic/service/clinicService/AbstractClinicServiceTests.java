@@ -42,7 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
  * TestContext Framework: </p> <ul> <li><strong>Spring IoC container caching</strong> which spares us unnecessary set up
  * time between test execution.</li> <li><strong>Dependency Injection</strong> of test fixture instances, meaning that
  * we don't need to perform application context lookups. See the use of {@link Autowired @Autowired} on the <code>{@link
- * AbstractClinicServiceTests#clinicService clinicService}</code> instance variable, which uses autowiring <em>by
+ * AbstractClinicServiceTests#clinicService specialtyService}</code> instance variable, which uses autowiring <em>by
  * type</em>. <li><strong>Transaction management</strong>, meaning each test method is executed in its own transaction,
  * which is automatically rolled back by default. Thus, even if tests insert or otherwise change database state, there
  * is no need for a teardown or cleanup script. <li> An {@link org.springframework.context.ApplicationContext
@@ -127,7 +127,7 @@ public abstract class AbstractClinicServiceTests {
 
 //    @Test
 //    public void shouldFindAllPetTypes() {
-//        Collection<PetType> petTypes = this.clinicService.findPetTypes();
+//        Collection<PetType> petTypes = this.specialtyService.findPetTypes();
 //
 //        PetType petType1 = EntityUtils.getById(petTypes, PetType.class, 1);
 //        assertThat(petType1.getName()).isEqualTo("cat");
@@ -420,61 +420,7 @@ public abstract class AbstractClinicServiceTests {
         assertThat(petType).isNull();
     }
 
-    @Test
-    public void shouldFindSpecialtyById(){
-    	Specialty specialty = this.clinicService.findSpecialtyById(1);
-    	assertThat(specialty.getName()).isEqualTo("radiology");
-    }
 
-    @Test
-    public void shouldFindAllSpecialtys(){
-        Collection<Specialty> specialties = this.clinicService.findAllSpecialties();
-        Specialty specialty1 = EntityUtils.getById(specialties, Specialty.class, 1);
-        assertThat(specialty1.getName()).isEqualTo("radiology");
-        Specialty specialty3 = EntityUtils.getById(specialties, Specialty.class, 3);
-        assertThat(specialty3.getName()).isEqualTo("dentistry");
-    }
-
-    @Test
-    @Transactional
-    public void shouldInsertSpecialty() {
-        Collection<Specialty> specialties = this.clinicService.findAllSpecialties();
-        int found = specialties.size();
-
-        Specialty specialty = new Specialty();
-        specialty.setName("dermatologist");
-
-        this.clinicService.saveSpecialty(specialty);
-        assertThat(specialty.getId().longValue()).isNotEqualTo(0);
-
-        specialties = this.clinicService.findAllSpecialties();
-        assertThat(specialties.size()).isEqualTo(found + 1);
-    }
-
-    @Test
-    @Transactional
-    public void shouldUpdateSpecialty(){
-    	Specialty specialty = this.clinicService.findSpecialtyById(1);
-    	String oldLastName = specialty.getName();
-        String newLastName = oldLastName + "X";
-        specialty.setName(newLastName);
-        this.clinicService.saveSpecialty(specialty);
-        specialty = this.clinicService.findSpecialtyById(1);
-        assertThat(specialty.getName()).isEqualTo(newLastName);
-    }
-
-    @Test
-    @Transactional
-    public void shouldDeleteSpecialty(){
-    	Specialty specialty = this.clinicService.findSpecialtyById(1);
-        this.clinicService.deleteSpecialty(specialty);
-        try {
-        	specialty = this.clinicService.findSpecialtyById(1);
-		} catch (Exception e) {
-			specialty = null;
-		}
-        assertThat(specialty).isNull();
-    }
 
 
 
