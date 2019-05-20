@@ -15,26 +15,22 @@
  */
 package org.springframework.samples.petclinic.service.clinicService;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.Collection;
-import java.util.Date;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.samples.petclinic.model.Owner;
-import org.springframework.samples.petclinic.model.Pet;
-import org.springframework.samples.petclinic.model.PetType;
-import org.springframework.samples.petclinic.model.Specialty;
-import org.springframework.samples.petclinic.model.Vet;
-import org.springframework.samples.petclinic.model.Visit;
+import org.springframework.samples.petclinic.model.*;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.OwnerService;
 import org.springframework.samples.petclinic.service.PetTypeService;
 import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
+import java.util.Date;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * <p> Base class for {@link ClinicService} integration tests. </p> <p> Subclasses should specify Spring context
@@ -60,6 +56,8 @@ public abstract class AbstractClinicServiceTests {
 
     @Autowired
     protected ClinicService clinicService;
+    @Autowired
+    protected OwnerService ownerService;
 
     @Autowired
     protected PetTypeService petTypeService;
@@ -71,16 +69,16 @@ public abstract class AbstractClinicServiceTests {
 
     @Test
     public void shouldFindOwnersByLastName() {
-        Collection<Owner> owners = this.clinicService.findOwnerByLastName("Davis");
+        Collection<Owner> owners = this.ownerService.findOwnerByLastName("Davis");
         assertThat(owners.size()).isEqualTo(2);
 
-        owners = this.clinicService.findOwnerByLastName("Daviss");
+        owners = this.ownerService.findOwnerByLastName("Daviss");
         assertThat(owners.isEmpty()).isTrue();
     }
 
     @Test
     public void shouldFindSingleOwnerWithPet() {
-        Owner owner = this.clinicService.findOwnerById(1);
+        Owner owner = this.ownerService.findOwnerById(1);
         assertThat(owner.getLastName()).startsWith("Franklin");
         assertThat(owner.getPets().size()).isEqualTo(1);
         assertThat(owner.getPets().get(0).getType()).isNotNull();
@@ -90,7 +88,7 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldInsertOwner() {
-        Collection<Owner> owners = this.clinicService.findOwnerByLastName("Schultz");
+        Collection<Owner> owners = this.ownerService.findOwnerByLastName("Schultz");
         int found = owners.size();
 
         Owner owner = new Owner();
@@ -99,25 +97,25 @@ public abstract class AbstractClinicServiceTests {
         owner.setAddress("4, Evans Street");
         owner.setCity("Wollongong");
         owner.setTelephone("4444444444");
-        this.clinicService.saveOwner(owner);
+        this.ownerService.saveOwner(owner);
         assertThat(owner.getId().longValue()).isNotEqualTo(0);
 
-        owners = this.clinicService.findOwnerByLastName("Schultz");
+        owners = this.ownerService.findOwnerByLastName("Schultz");
         assertThat(owners.size()).isEqualTo(found + 1);
     }
 
     @Test
     @Transactional
     public void shouldUpdateOwner() {
-        Owner owner = this.clinicService.findOwnerById(1);
+        Owner owner = this.ownerService.findOwnerById(1);
         String oldLastName = owner.getLastName();
         String newLastName = oldLastName + "X";
 
         owner.setLastName(newLastName);
-        this.clinicService.saveOwner(owner);
+        this.ownerService.saveOwner(owner);
 
         // retrieving new name from database
-        owner = this.clinicService.findOwnerById(1);
+        owner = this.ownerService.findOwnerById(1);
         assertThat(owner.getLastName()).isEqualTo(newLastName);
     }
 
@@ -142,7 +140,7 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldInsertPetIntoDatabaseAndGenerateId() {
-        Owner owner6 = this.clinicService.findOwnerById(6);
+        Owner owner6 = this.ownerService.findOwnerById(6);
         int found = owner6.getPets().size();
 
         Pet pet = new Pet();
@@ -154,9 +152,9 @@ public abstract class AbstractClinicServiceTests {
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
 
         this.clinicService.savePet(pet);
-        this.clinicService.saveOwner(owner6);
+        this.ownerService.saveOwner(owner6);
 
-        owner6 = this.clinicService.findOwnerById(6);
+        owner6 = this.ownerService.findOwnerById(6);
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
@@ -290,7 +288,7 @@ public abstract class AbstractClinicServiceTests {
 
     @Test
     public void shouldFindAllOwners(){
-        Collection<Owner> owners = this.clinicService.findAllOwners();
+        Collection<Owner> owners = this.ownerService.findAllOwners();
         Owner owner1 = EntityUtils.getById(owners, Owner.class, 1);
         assertThat(owner1.getFirstName()).isEqualTo("George");
         Owner owner3 = EntityUtils.getById(owners, Owner.class, 3);
@@ -300,10 +298,10 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldDeleteOwner(){
-    	Owner owner = this.clinicService.findOwnerById(1);
-        this.clinicService.deleteOwner(owner);
+    	Owner owner = this.ownerService.findOwnerById(1);
+        this.ownerService.deleteOwner(owner);
         try {
-        	owner = this.clinicService.findOwnerById(1);
+        	owner = this.ownerService.findOwnerById(1);
 		} catch (Exception e) {
 			owner = null;
 		}
