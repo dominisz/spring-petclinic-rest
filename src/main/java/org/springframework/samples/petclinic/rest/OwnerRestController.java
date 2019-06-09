@@ -130,11 +130,7 @@ public class OwnerRestController {
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	@Transactional
 	public ResponseEntity<Void> deleteOwner(@PathVariable("ownerId") int ownerId) {
-		Owner owner = ownerService.findOwnerById(ownerId);
-		if (owner == null) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-		ownerService.deleteOwner(owner);
+		ownerService.deleteOwner(ownerId);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 

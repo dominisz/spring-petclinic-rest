@@ -88,7 +88,7 @@ public abstract class AbstractOwnerServiceTests {
     @Transactional
     public void shouldDeleteOwner(){
         Owner owner = this.ownerService.findOwnerById(1);
-        this.ownerService.deleteOwner(owner);
+        this.ownerService.deleteOwner(1);
         try {
             owner = this.ownerService.findOwnerById(1);
         } catch (Exception e) {

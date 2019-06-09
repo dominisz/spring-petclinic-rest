@@ -3,6 +3,8 @@ package org.springframework.samples.petclinic.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectRetrievalFailureException;
 import org.springframework.samples.petclinic.exception.OwnerNotFoundException;
 import org.springframework.samples.petclinic.model.Owner;
@@ -31,7 +33,11 @@ public class OwnerServiceImpl implements OwnerService {
 
     @Override
     @Transactional
-    public void deleteOwner(Owner owner) throws DataAccessException {
+    public void deleteOwner(int ownerId) throws DataAccessException {
+        Owner owner = ownerRepository.findById(ownerId);
+        if (owner == null) {
+            throw new OwnerNotFoundException(ownerId);
+        }
         ownerRepository.delete(owner);
     }
 
