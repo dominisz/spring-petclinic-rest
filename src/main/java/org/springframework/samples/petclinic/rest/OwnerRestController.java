@@ -61,84 +61,91 @@ public class OwnerRestController {
 		if (ownerLastName == null) {
 			ownerLastName = "";
 		}
-		Collection<Owner> owners = this.ownerService.findOwnerByLastName(ownerLastName);
-		if (owners.isEmpty()) {
-			return new ResponseEntity<Collection<Owner>>(HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<Collection<Owner>>(owners, HttpStatus.OK);
-	}
+        return collectionToResponseEntity(ownerService.findOwnerByLastName(ownerLastName));
+    }
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Collection<Owner>> getOwners() {
-		Collection<Owner> owners = this.ownerService.findAllOwners();
-		if (owners.isEmpty()) {
-			return new ResponseEntity<Collection<Owner>>(HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<Collection<Owner>>(owners, HttpStatus.OK);
-	}
+        return collectionToResponseEntity(ownerService.findAllOwners());
+    }
+
+    private ResponseEntity<Collection<Owner>> collectionToResponseEntity(Collection<Owner> owners) {
+        if (owners.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(owners, HttpStatus.OK);
+    }
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Owner> getOwner(@PathVariable("ownerId") int ownerId) {
-		Owner owner = null;
-		owner = this.ownerService.findOwnerById(ownerId);
+		Owner owner = ownerService.findOwnerById(ownerId);
 		if (owner == null) {
-			return new ResponseEntity<Owner>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<Owner>(owner, HttpStatus.OK);
+		return new ResponseEntity<>(owner, HttpStatus.OK);
 	}
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Owner> addOwner(@RequestBody @Valid Owner owner, BindingResult bindingResult,
 			UriComponentsBuilder ucBuilder) {
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
-		if (bindingResult.hasErrors() || (owner == null)) {
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Owner>(headers, HttpStatus.BAD_REQUEST);
-		}
-		this.ownerService.saveOwner(owner);
-		headers.setLocation(ucBuilder.path("/api/owners/{id}").buildAndExpand(owner.getId()).toUri());
-		return new ResponseEntity<Owner>(owner, headers, HttpStatus.CREATED);
+		if (requestHasErrors(bindingResult, owner)) {
+            return errorsToResponseEntity(bindingResult);
+        }
+		ownerService.saveOwner(owner);
+        return new ResponseEntity<>(owner, locationHeader(owner, ucBuilder), HttpStatus.CREATED);
 	}
+
+    private HttpHeaders locationHeader(@Valid @RequestBody Owner owner, UriComponentsBuilder ucBuilder) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ucBuilder.path("/api/owners/{id}").buildAndExpand(owner.getId()).toUri());
+        return headers;
+    }
+
+    private boolean requestHasErrors(BindingResult bindingResult, Owner owner) {
+        return bindingResult.hasErrors() || owner == null;
+    }
+
+    private ResponseEntity<Owner> errorsToResponseEntity(BindingResult bindingResult) {
+        BindingErrorsResponse errors = new BindingErrorsResponse();
+        HttpHeaders headers = new HttpHeaders();
+        errors.addAllErrors(bindingResult);
+        headers.add("errors", errors.toJSON());
+        return new ResponseEntity<>(headers, HttpStatus.BAD_REQUEST);
+    }
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Owner> updateOwner(@PathVariable("ownerId") int ownerId, @RequestBody @Valid Owner owner,
-			BindingResult bindingResult, UriComponentsBuilder ucBuilder) {
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
-		if (bindingResult.hasErrors() || (owner == null)) {
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Owner>(headers, HttpStatus.BAD_REQUEST);
-		}
-		Owner currentOwner = this.ownerService.findOwnerById(ownerId);
+			BindingResult bindingResult) {
+		if (requestHasErrors(bindingResult, owner)) {
+            return errorsToResponseEntity(bindingResult);
+        }
+		Owner currentOwner = ownerService.findOwnerById(ownerId);
 		if (currentOwner == null) {
-			return new ResponseEntity<Owner>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 		currentOwner.setAddress(owner.getAddress());
 		currentOwner.setCity(owner.getCity());
 		currentOwner.setFirstName(owner.getFirstName());
 		currentOwner.setLastName(owner.getLastName());
 		currentOwner.setTelephone(owner.getTelephone());
-		this.ownerService.saveOwner(currentOwner);
-		return new ResponseEntity<Owner>(currentOwner, HttpStatus.NO_CONTENT);
+		ownerService.saveOwner(currentOwner);
+		return new ResponseEntity<>(currentOwner, HttpStatus.NO_CONTENT);
 	}
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	@Transactional
 	public ResponseEntity<Void> deleteOwner(@PathVariable("ownerId") int ownerId) {
-		Owner owner = this.ownerService.findOwnerById(ownerId);
+		Owner owner = ownerService.findOwnerById(ownerId);
 		if (owner == null) {
-			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		this.ownerService.deleteOwner(owner);
-		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+		ownerService.deleteOwner(owner);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
 }
