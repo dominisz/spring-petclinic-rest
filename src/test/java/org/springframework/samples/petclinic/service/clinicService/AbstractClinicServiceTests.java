@@ -31,6 +31,7 @@ import org.springframework.samples.petclinic.model.Specialty;
 import org.springframework.samples.petclinic.model.Vet;
 import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.OwnerService;
 import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
  * TestContext Framework: </p> <ul> <li><strong>Spring IoC container caching</strong> which spares us unnecessary set up
  * time between test execution.</li> <li><strong>Dependency Injection</strong> of test fixture instances, meaning that
  * we don't need to perform application context lookups. See the use of {@link Autowired @Autowired} on the <code>{@link
- * AbstractClinicServiceTests#clinicService clinicService}</code> instance variable, which uses autowiring <em>by
+ * AbstractClinicServiceTests#clinicService ownerService}</code> instance variable, which uses autowiring <em>by
  * type</em>. <li><strong>Transaction management</strong>, meaning each test method is executed in its own transaction,
  * which is automatically rolled back by default. Thus, even if tests insert or otherwise change database state, there
  * is no need for a teardown or cleanup script. <li> An {@link org.springframework.context.ApplicationContext
@@ -60,61 +61,12 @@ public abstract class AbstractClinicServiceTests {
     @Autowired
     protected ClinicService clinicService;
 
+    @Autowired
+    protected OwnerService ownerService;
+
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-    }
-
-    @Test
-    public void shouldFindOwnersByLastName() {
-        Collection<Owner> owners = this.clinicService.findOwnerByLastName("Davis");
-        assertThat(owners.size()).isEqualTo(2);
-
-        owners = this.clinicService.findOwnerByLastName("Daviss");
-        assertThat(owners.isEmpty()).isTrue();
-    }
-
-    @Test
-    public void shouldFindSingleOwnerWithPet() {
-        Owner owner = this.clinicService.findOwnerById(1);
-        assertThat(owner.getLastName()).startsWith("Franklin");
-        assertThat(owner.getPets().size()).isEqualTo(1);
-        assertThat(owner.getPets().get(0).getType()).isNotNull();
-        assertThat(owner.getPets().get(0).getType().getName()).isEqualTo("cat");
-    }
-
-    @Test
-    @Transactional
-    public void shouldInsertOwner() {
-        Collection<Owner> owners = this.clinicService.findOwnerByLastName("Schultz");
-        int found = owners.size();
-
-        Owner owner = new Owner();
-        owner.setFirstName("Sam");
-        owner.setLastName("Schultz");
-        owner.setAddress("4, Evans Street");
-        owner.setCity("Wollongong");
-        owner.setTelephone("4444444444");
-        this.clinicService.saveOwner(owner);
-        assertThat(owner.getId().longValue()).isNotEqualTo(0);
-
-        owners = this.clinicService.findOwnerByLastName("Schultz");
-        assertThat(owners.size()).isEqualTo(found + 1);
-    }
-
-    @Test
-    @Transactional
-    public void shouldUpdateOwner() {
-        Owner owner = this.clinicService.findOwnerById(1);
-        String oldLastName = owner.getLastName();
-        String newLastName = oldLastName + "X";
-
-        owner.setLastName(newLastName);
-        this.clinicService.saveOwner(owner);
-
-        // retrieving new name from database
-        owner = this.clinicService.findOwnerById(1);
-        assertThat(owner.getLastName()).isEqualTo(newLastName);
     }
 
     @Test
@@ -127,7 +79,7 @@ public abstract class AbstractClinicServiceTests {
 
 //    @Test
 //    public void shouldFindAllPetTypes() {
-//        Collection<PetType> petTypes = this.clinicService.findPetTypes();
+//        Collection<PetType> petTypes = this.ownerService.findPetTypes();
 //
 //        PetType petType1 = EntityUtils.getById(petTypes, PetType.class, 1);
 //        assertThat(petType1.getName()).isEqualTo("cat");
@@ -138,7 +90,7 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldInsertPetIntoDatabaseAndGenerateId() {
-        Owner owner6 = this.clinicService.findOwnerById(6);
+        Owner owner6 = this.ownerService.findOwnerById(6);
         int found = owner6.getPets().size();
 
         Pet pet = new Pet();
@@ -150,9 +102,9 @@ public abstract class AbstractClinicServiceTests {
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
 
         this.clinicService.savePet(pet);
-        this.clinicService.saveOwner(owner6);
+        this.ownerService.saveOwner(owner6);
 
-        owner6 = this.clinicService.findOwnerById(6);
+        owner6 = this.ownerService.findOwnerById(6);
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
@@ -340,28 +292,6 @@ public abstract class AbstractClinicServiceTests {
 			vet = null;
 		}
         assertThat(vet).isNull();
-    }
-
-    @Test
-    public void shouldFindAllOwners(){
-        Collection<Owner> owners = this.clinicService.findAllOwners();
-        Owner owner1 = EntityUtils.getById(owners, Owner.class, 1);
-        assertThat(owner1.getFirstName()).isEqualTo("George");
-        Owner owner3 = EntityUtils.getById(owners, Owner.class, 3);
-        assertThat(owner3.getFirstName()).isEqualTo("Eduardo");
-    }
-
-    @Test
-    @Transactional
-    public void shouldDeleteOwner(){
-    	Owner owner = this.clinicService.findOwnerById(1);
-        this.clinicService.deleteOwner(owner);
-        try {
-        	owner = this.clinicService.findOwnerById(1);
-		} catch (Exception e) {
-			owner = null;
-		}
-        assertThat(owner).isNull();
     }
 
     @Test
