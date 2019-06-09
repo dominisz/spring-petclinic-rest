@@ -123,17 +123,7 @@ public class OwnerRestController {
 		if (requestHasErrors(bindingResult, owner)) {
             return errorsToResponseEntity(bindingResult);
         }
-		Owner currentOwner = ownerService.findOwnerById(ownerId);
-		if (currentOwner == null) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-		currentOwner.setAddress(owner.getAddress());
-		currentOwner.setCity(owner.getCity());
-		currentOwner.setFirstName(owner.getFirstName());
-		currentOwner.setLastName(owner.getLastName());
-		currentOwner.setTelephone(owner.getTelephone());
-		ownerService.saveOwner(currentOwner);
-		return new ResponseEntity<>(currentOwner, HttpStatus.NO_CONTENT);
+		return new ResponseEntity<>(ownerService.updateOwner(ownerId, owner), HttpStatus.NO_CONTENT);
 	}
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
