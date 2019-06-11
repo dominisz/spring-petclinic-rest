@@ -80,11 +80,9 @@ public class OwnerRestController {
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Owner> getOwner(@PathVariable("ownerId") int ownerId) {
-		Owner owner = ownerService.findOwnerById(ownerId);
-		if (owner == null) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<>(owner, HttpStatus.OK);
+        return ownerService.findOwnerById(ownerId)
+            .map(owner -> new ResponseEntity<>(owner, HttpStatus.OK))
+            .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )

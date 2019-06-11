@@ -43,15 +43,12 @@ public class OwnerServiceImpl implements OwnerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Owner findOwnerById(int id) throws DataAccessException {
-        Owner owner = null;
+    public Optional<Owner> findOwnerById(int id) throws DataAccessException {
         try {
-            owner = ownerRepository.findById(id);
+            return Optional.of(ownerRepository.findById(id));
         } catch (ObjectRetrievalFailureException | EmptyResultDataAccessException e) {
-            // just ignore not found exceptions for Jdbc/Jpa realization
-            return null;
+            return Optional.empty();
         }
-        return owner;
     }
 
     @Override

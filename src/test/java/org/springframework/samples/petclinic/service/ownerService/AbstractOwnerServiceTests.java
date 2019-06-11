@@ -34,7 +34,7 @@ public abstract class AbstractOwnerServiceTests {
 
     @Test
     public void shouldFindSingleOwnerWithPet() {
-        Owner owner = this.ownerService.findOwnerById(1);
+        Owner owner = this.ownerService.findOwnerById(1).get();
         assertThat(owner.getLastName()).startsWith("Franklin");
         assertThat(owner.getPets().size()).isEqualTo(1);
         assertThat(owner.getPets().get(0).getType()).isNotNull();
@@ -63,7 +63,7 @@ public abstract class AbstractOwnerServiceTests {
     @Test
     @Transactional
     public void shouldUpdateOwner() {
-        Owner owner = this.ownerService.findOwnerById(1);
+        Owner owner = this.ownerService.findOwnerById(1).get();
         String oldLastName = owner.getLastName();
         String newLastName = oldLastName + "X";
 
@@ -71,7 +71,7 @@ public abstract class AbstractOwnerServiceTests {
         this.ownerService.saveOwner(owner);
 
         // retrieving new name from database
-        owner = this.ownerService.findOwnerById(1);
+        owner = this.ownerService.findOwnerById(1).get();
         assertThat(owner.getLastName()).isEqualTo(newLastName);
     }
 
@@ -87,10 +87,10 @@ public abstract class AbstractOwnerServiceTests {
     @Test
     @Transactional
     public void shouldDeleteOwner(){
-        Owner owner = this.ownerService.findOwnerById(1);
+        Owner owner = this.ownerService.findOwnerById(1).get();
         this.ownerService.deleteOwner(1);
         try {
-            owner = this.ownerService.findOwnerById(1);
+            owner = this.ownerService.findOwnerById(1).get();
         } catch (Exception e) {
             owner = null;
         }

@@ -90,7 +90,7 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldInsertPetIntoDatabaseAndGenerateId() {
-        Owner owner6 = this.ownerService.findOwnerById(6);
+        Owner owner6 = this.ownerService.findOwnerById(6).get();
         int found = owner6.getPets().size();
 
         Pet pet = new Pet();
@@ -104,7 +104,7 @@ public abstract class AbstractClinicServiceTests {
         this.clinicService.savePet(pet);
         this.ownerService.saveOwner(owner6);
 
-        owner6 = this.ownerService.findOwnerById(6);
+        owner6 = this.ownerService.findOwnerById(6).get();
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
