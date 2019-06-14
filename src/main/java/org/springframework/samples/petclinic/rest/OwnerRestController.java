@@ -58,21 +58,22 @@ public class OwnerRestController {
 			ownerLastName = "";
 		}
 		Collection<Owner> owners = this.clinicService.findOwnerByLastName(ownerLastName);
-		if (owners.isEmpty()) {
-			return new ResponseEntity<Collection<Owner>>(HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<Collection<Owner>>(owners, HttpStatus.OK);
-	}
+        return collectionToResponseEntity(owners);
+    }
+
+    private ResponseEntity<Collection<Owner>> collectionToResponseEntity(Collection<Owner> owners) {
+        if (owners.isEmpty()) {
+            return new ResponseEntity<Collection<Owner>>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<Collection<Owner>>(owners, HttpStatus.OK);
+    }
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Collection<Owner>> getOwners() {
 		Collection<Owner> owners = this.clinicService.findAllOwners();
-		if (owners.isEmpty()) {
-			return new ResponseEntity<Collection<Owner>>(HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<Collection<Owner>>(owners, HttpStatus.OK);
-	}
+        return collectionToResponseEntity(owners);
+    }
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
