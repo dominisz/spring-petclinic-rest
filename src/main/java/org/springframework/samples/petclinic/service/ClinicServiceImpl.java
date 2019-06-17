@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Mostly used as a facade for all Petclinic controllers
@@ -102,14 +103,14 @@ public class ClinicServiceImpl implements ClinicService {
 	@Override
 	@Transactional(readOnly = true)
 	public Specialty findSpecialtyById(int specialtyId) {
-		Specialty specialty = null;
+		Optional<Specialty> specialty;
 		try {
-			specialty = specialtyRepository.findById(specialtyId);
+			specialty = Optional.of(specialtyRepository.findById(specialtyId));
 		} catch (ObjectRetrievalFailureException|EmptyResultDataAccessException e) {
 		// just ignore not found exceptions for Jdbc/Jpa realization
 			return null;
 		}
-		return specialty;
+		return specialty.get();
 	}
 
 	@Override
