@@ -16,12 +16,15 @@
 package org.springframework.samples.petclinic.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.orm.ObjectRetrievalFailureException;
-import org.springframework.samples.petclinic.model.*;
-import org.springframework.samples.petclinic.repository.*;
+import org.springframework.samples.petclinic.model.Specialty;
+import org.springframework.samples.petclinic.model.Visit;
+import org.springframework.samples.petclinic.repository.PetRepository;
+import org.springframework.samples.petclinic.repository.PetTypeRepository;
+import org.springframework.samples.petclinic.repository.SpecialtyRepository;
+import org.springframework.samples.petclinic.repository.VisitRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +42,6 @@ import java.util.Collection;
 public class ClinicServiceImpl implements ClinicService {
 
     private PetRepository petRepository;
-    private OwnerRepository ownerRepository;
     private VisitRepository visitRepository;
     private SpecialtyRepository specialtyRepository;
 	private PetTypeRepository petTypeRepository;
@@ -47,12 +49,10 @@ public class ClinicServiceImpl implements ClinicService {
     @Autowired
      public ClinicServiceImpl(
        		 PetRepository petRepository,
-    		 OwnerRepository ownerRepository,
     		 VisitRepository visitRepository,
     		 SpecialtyRepository specialtyRepository,
 			 PetTypeRepository petTypeRepository) {
         this.petRepository = petRepository;
-        this.ownerRepository = ownerRepository;
         this.visitRepository = visitRepository;
         this.specialtyRepository = specialtyRepository;
 		this.petTypeRepository = petTypeRepository;
@@ -83,20 +83,6 @@ public class ClinicServiceImpl implements ClinicService {
 	@Transactional
 	public void deleteVisit(Visit visit) throws DataAccessException {
 		visitRepository.delete(visit);
-	}
-
-
-
-	@Override
-	@Transactional(readOnly = true)
-	public Collection<Owner> findAllOwners() throws DataAccessException {
-		return ownerRepository.findAll();
-	}
-
-	@Override
-	@Transactional
-	public void deleteOwner(Owner owner) throws DataAccessException {
-		ownerRepository.delete(owner);
 	}
 
 	@Override
@@ -130,22 +116,6 @@ public class ClinicServiceImpl implements ClinicService {
 		specialtyRepository.delete(specialty);
 	}
 
-
-	@Override
-	@Transactional(readOnly = true)
-	public Owner findOwnerById(int id) throws DataAccessException {
-		Owner owner = null;
-		try {
-			owner = ownerRepository.findById(id);
-		} catch (ObjectRetrievalFailureException|EmptyResultDataAccessException e) {
-		// just ignore not found exceptions for Jdbc/Jpa realization
-			return null;
-		}
-		return owner;
-	}
-
-
-
 	@Override
 	@Transactional
 	public void saveVisit(Visit visit) throws DataAccessException {
@@ -153,27 +123,9 @@ public class ClinicServiceImpl implements ClinicService {
 
 	}
 
-
-	@Override
-	@Transactional
-	public void saveOwner(Owner owner) throws DataAccessException {
-		ownerRepository.save(owner);
-
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public Collection<Owner> findOwnerByLastName(String lastName) throws DataAccessException {
-		return ownerRepository.findByLastName(lastName);
-	}
-
 	@Override
 	@Transactional(readOnly = true)
 	public Collection<Visit> findVisitsByPetId(int petId) {
 		return visitRepository.findByPetId(petId);
 	}
-
-
-
-
 }
