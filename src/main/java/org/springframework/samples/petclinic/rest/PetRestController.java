@@ -66,7 +66,7 @@ public class PetRestController {
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @RequestMapping(value = "", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Pet> addPet(@RequestBody @Valid Pet pet, BindingResult bindingResult, UriComponentsBuilder ucBuilder) {
-        if (checkForErrors(pet, bindingResult)) {
+        if (isValidRequest(pet, bindingResult)) {
             return createResponseEntityForBadRequest(pet, bindingResult);
         }
         this.petService.savePet(pet);
@@ -76,7 +76,7 @@ public class PetRestController {
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @RequestMapping(value = "/{petId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Pet> updatePet(@PathVariable("petId") int petId, @RequestBody @Valid Pet pet, BindingResult bindingResult) {
-        if (checkForErrors(pet, bindingResult)) {
+        if (isValidRequest(pet, bindingResult)) {
             return createResponseEntityForBadRequest(pet, bindingResult);
         }
         Optional<Pet> currentPet = this.petService.findPetById(petId);
@@ -102,7 +102,7 @@ public class PetRestController {
 
     }
 
-    private boolean checkForErrors(@Valid @RequestBody Pet pet, BindingResult bindingResult) {
+    private boolean isValidRequest(@Valid @RequestBody Pet pet, BindingResult bindingResult) {
         return bindingResult.hasErrors() || (pet == null);
     }
 
