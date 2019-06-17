@@ -89,28 +89,19 @@ public class OwnerRestController {
 	@RequestMapping(value = "", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Owner> addOwner(@RequestBody @Valid Owner owner, BindingResult bindingResult,
 			UriComponentsBuilder ucBuilder) {
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
-		if (bindingResult.hasErrors() || (owner == null)) {
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Owner>(headers, HttpStatus.BAD_REQUEST);
+		if (invalidRequest(bindingResult, owner)) {
+			return createErrorResponse(bindingResult);
 		}
 		this.clinicService.saveOwner(owner);
-		headers.setLocation(ucBuilder.path("/api/owners/{id}").buildAndExpand(owner.getId()).toUri());
-		return new ResponseEntity<Owner>(owner, headers, HttpStatus.CREATED);
+		return new ResponseEntity<Owner>(owner, createLocationHeaders(ucBuilder, owner), HttpStatus.CREATED);
 	}
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Owner> updateOwner(@PathVariable("ownerId") int ownerId, @RequestBody @Valid Owner owner,
 			BindingResult bindingResult, UriComponentsBuilder ucBuilder) {
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
-		if (bindingResult.hasErrors() || (owner == null)) {
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Owner>(headers, HttpStatus.BAD_REQUEST);
+		if (invalidRequest(bindingResult, owner)) {
+			return createErrorResponse(bindingResult);
 		}
 		Owner currentOwner = this.clinicService.findOwnerById(ownerId);
 		if (currentOwner == null) {
@@ -123,6 +114,24 @@ public class OwnerRestController {
 		currentOwner.setTelephone(owner.getTelephone());
 		this.clinicService.saveOwner(currentOwner);
 		return new ResponseEntity<Owner>(currentOwner, HttpStatus.NO_CONTENT);
+	}
+
+	private boolean invalidRequest(BindingResult bindingResult, Owner owner) {
+		return bindingResult.hasErrors() || owner == null;
+	}
+
+	private ResponseEntity<Owner> createErrorResponse(BindingResult bindingResult) {
+		BindingErrorsResponse errors = new BindingErrorsResponse();
+		HttpHeaders headers = new HttpHeaders();
+		errors.addAllErrors(bindingResult);
+		headers.add("errors", errors.toJSON());
+		return new ResponseEntity<Owner>(headers, HttpStatus.BAD_REQUEST);
+	}
+
+	private HttpHeaders createLocationHeaders(UriComponentsBuilder ucBuilder, Owner owner) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setLocation(ucBuilder.path("/api/owners/{id}").buildAndExpand(owner.getId()).toUri());
+		return headers;
 	}
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
