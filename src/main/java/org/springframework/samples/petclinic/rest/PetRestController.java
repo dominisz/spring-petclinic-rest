@@ -66,27 +66,18 @@ public class PetRestController {
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @RequestMapping(value = "", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Pet> addPet(@RequestBody @Valid Pet pet, BindingResult bindingResult, UriComponentsBuilder ucBuilder) {
-        BindingErrorsResponse errors = new BindingErrorsResponse();
-        HttpHeaders headers = new HttpHeaders();
-        if (bindingResult.hasErrors() || (pet == null)) {
-            errors.addAllErrors(bindingResult);
-            headers.add("errors", errors.toJSON());
-            return new ResponseEntity<Pet>(headers, HttpStatus.BAD_REQUEST);
+        if (checkForErrors(pet, bindingResult)) {
+            return createResponseEntityForBadRequest(pet, bindingResult);
         }
         this.petService.savePet(pet);
-        headers.setLocation(ucBuilder.path("/api/pets/{id}").buildAndExpand(pet.getId()).toUri());
-        return new ResponseEntity<Pet>(pet, headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(pet, createHeadersWithLocation(pet, ucBuilder), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @RequestMapping(value = "/{petId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Pet> updatePet(@PathVariable("petId") int petId, @RequestBody @Valid Pet pet, BindingResult bindingResult) {
-        BindingErrorsResponse errors = new BindingErrorsResponse();
-        HttpHeaders headers = new HttpHeaders();
-        if (bindingResult.hasErrors() || (pet == null)) {
-            errors.addAllErrors(bindingResult);
-            headers.add("errors", errors.toJSON());
-            return new ResponseEntity<Pet>(headers, HttpStatus.BAD_REQUEST);
+        if (checkForErrors(pet, bindingResult)) {
+            return createResponseEntityForBadRequest(pet, bindingResult);
         }
         Optional<Pet> currentPet = this.petService.findPetById(petId);
         return currentPet.map(pet1 -> {
@@ -109,6 +100,24 @@ public class PetRestController {
             return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
         }).orElseGet(() -> new ResponseEntity<Void>(HttpStatus.NOT_FOUND));
 
+    }
+
+    private boolean checkForErrors(@Valid @RequestBody Pet pet, BindingResult bindingResult) {
+        return bindingResult.hasErrors() || (pet == null);
+    }
+
+    private HttpHeaders createHeadersWithLocation(Pet pet, UriComponentsBuilder ucBuilder) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ucBuilder.path("/api/pets/{id}").buildAndExpand(pet.getId()).toUri());
+        return headers;
+    }
+
+    private ResponseEntity<Pet> createResponseEntityForBadRequest(Pet pet, BindingResult bindingResult) {
+        BindingErrorsResponse errors = new BindingErrorsResponse();
+        HttpHeaders headers = new HttpHeaders();
+        errors.addAllErrors(bindingResult);
+        headers.add("errors", errors.toJSON());
+        return new ResponseEntity<>(headers, HttpStatus.BAD_REQUEST);
     }
 
 
