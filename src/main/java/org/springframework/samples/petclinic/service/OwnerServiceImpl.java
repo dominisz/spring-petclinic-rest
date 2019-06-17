@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 public class OwnerServiceImpl implements OwnerService {
@@ -35,15 +36,14 @@ public class OwnerServiceImpl implements OwnerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Owner findOwnerById(int id) throws DataAccessException {
+    public Optional<Owner> findOwnerById(int id) throws DataAccessException {
         Owner owner = null;
         try {
             owner = ownerRepository.findById(id);
         } catch (ObjectRetrievalFailureException | EmptyResultDataAccessException e) {
             // just ignore not found exceptions for Jdbc/Jpa realization
-            return null;
         }
-        return owner;
+        return Optional.of(owner);
     }
 
     @Override
