@@ -76,27 +76,36 @@ public class SpecialtyRestController {
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Specialty> addSpecialty(@RequestBody @Valid Specialty specialty, BindingResult bindingResult, UriComponentsBuilder ucBuilder){
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
-		if(bindingResult.hasErrors() || (specialty == null)){
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Specialty>(headers, HttpStatus.BAD_REQUEST);
+		if(invalidRequest(bindingResult, specialty)){
+			return createErrorResponse(bindingResult);
 		}
 		this.clinicService.saveSpecialty(specialty);
+		return new ResponseEntity<Specialty>(specialty, createLocationHeaders(ucBuilder, specialty), HttpStatus.CREATED);
+	}
+
+	private boolean invalidRequest(BindingResult bindingResult, Specialty specialty) {
+		return bindingResult.hasErrors() || specialty == null;
+	}
+
+	private ResponseEntity<Specialty> createErrorResponse(BindingResult bindingResult) {
+		BindingErrorsResponse errors = new BindingErrorsResponse();
+		HttpHeaders headers = new HttpHeaders();
+		errors.addAllErrors(bindingResult);
+		headers.add("errors", errors.toJSON());
+		return new ResponseEntity<Specialty>(headers, HttpStatus.BAD_REQUEST);
+	}
+
+	private HttpHeaders createLocationHeaders(UriComponentsBuilder ucBuilder, Specialty specialty) {
+		HttpHeaders headers = new HttpHeaders();
 		headers.setLocation(ucBuilder.path("/api/specialtys/{id}").buildAndExpand(specialty.getId()).toUri());
-		return new ResponseEntity<Specialty>(specialty, headers, HttpStatus.CREATED);
+		return headers;
 	}
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "/{specialtyId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Specialty> updateSpecialty(@PathVariable("specialtyId") int specialtyId, @RequestBody @Valid Specialty specialty, BindingResult bindingResult){
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
-		if(bindingResult.hasErrors() || (specialty == null)){
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Specialty>(headers, HttpStatus.BAD_REQUEST);
+		if(invalidRequest(bindingResult, specialty)){
+			return createErrorResponse(bindingResult);
 		}
 		Specialty currentSpecialty = this.clinicService.findSpecialtyById(specialtyId);
 		if(currentSpecialty == null){
