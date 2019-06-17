@@ -83,7 +83,7 @@ public abstract class AbstractClinicServiceTests {
 
     @Test
     public void shouldFindSingleOwnerWithPet() {
-        Owner owner = this.ownerService.findOwnerById(1);
+        Owner owner = this.ownerService.findOwnerById(1).get();
         assertThat(owner.getLastName()).startsWith("Franklin");
         assertThat(owner.getPets().size()).isEqualTo(1);
         assertThat(owner.getPets().get(0).getType()).isNotNull();
@@ -112,7 +112,7 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldUpdateOwner() {
-        Owner owner = this.ownerService.findOwnerById(1);
+        Owner owner = this.ownerService.findOwnerById(1).get();
         String oldLastName = owner.getLastName();
         String newLastName = oldLastName + "X";
 
@@ -120,7 +120,7 @@ public abstract class AbstractClinicServiceTests {
         this.ownerService.saveOwner(owner);
 
         // retrieving new name from database
-        owner = this.ownerService.findOwnerById(1);
+        owner = this.ownerService.findOwnerById(1).get();
         assertThat(owner.getLastName()).isEqualTo(newLastName);
     }
 
@@ -145,7 +145,7 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldInsertPetIntoDatabaseAndGenerateId() {
-        Owner owner6 = this.ownerService.findOwnerById(6);
+        Owner owner6 = this.ownerService.findOwnerById(6).get();
         int found = owner6.getPets().size();
 
         Pet pet = new Pet();
@@ -159,7 +159,7 @@ public abstract class AbstractClinicServiceTests {
         this.petService.savePet(pet);
         this.ownerService.saveOwner(owner6);
 
-        owner6 = this.ownerService.findOwnerById(6);
+        owner6 = this.ownerService.findOwnerById(6).get();
         assertThat(owner6.getPets().size()).isEqualTo(found + 1);
         // checks that id has been generated
         assertThat(pet.getId()).isNotNull();
@@ -303,10 +303,10 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldDeleteOwner(){
-    	Owner owner = this.ownerService.findOwnerById(1);
+    	Owner owner = this.ownerService.findOwnerById(1).get();
         this.ownerService.deleteOwner(owner);
         try {
-        	owner = this.ownerService.findOwnerById(1);
+        	owner = this.ownerService.findOwnerById(1).get();
 		} catch (Exception e) {
 			owner = null;
 		}

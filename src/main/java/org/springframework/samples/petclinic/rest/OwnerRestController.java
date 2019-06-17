@@ -71,12 +71,9 @@ public class OwnerRestController {
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Owner> getOwner(@PathVariable("ownerId") int ownerId) {
-		Owner owner = null;
-		owner = this.ownerService.findOwnerById(ownerId);
-		if (owner == null) {
-			return new ResponseEntity<Owner>(HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<Owner>(owner, HttpStatus.OK);
+        return this.ownerService.findOwnerById(ownerId)
+            .map(own -> new ResponseEntity<>(own, HttpStatus.OK))
+            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 
     @PreAuthorize( "hasRole(@roles.OWNER_ADMIN)" )
@@ -97,17 +94,18 @@ public class OwnerRestController {
 		if (invalidRequest(bindingResult, owner)) {
 			return createErrorResponse(bindingResult);
 		}
-		Owner currentOwner = this.ownerService.findOwnerById(ownerId);
-		if (currentOwner == null) {
-			return new ResponseEntity<Owner>(HttpStatus.NOT_FOUND);
-		}
-		currentOwner.setAddress(owner.getAddress());
-		currentOwner.setCity(owner.getCity());
-		currentOwner.setFirstName(owner.getFirstName());
-		currentOwner.setLastName(owner.getLastName());
-		currentOwner.setTelephone(owner.getTelephone());
-		this.ownerService.saveOwner(currentOwner);
-		return new ResponseEntity<Owner>(currentOwner, HttpStatus.NO_CONTENT);
+
+        return this.ownerService.findOwnerById(ownerId)
+            .map(own -> {
+                own.setAddress(owner.getAddress());
+                own.setCity(owner.getCity());
+                own.setFirstName(owner.getFirstName());
+                own.setLastName(owner.getLastName());
+                own.setTelephone(owner.getTelephone());
+                this.ownerService.saveOwner(own);
+                return new ResponseEntity<Owner>(own, HttpStatus.NO_CONTENT);
+            })
+            .orElseGet(() -> new ResponseEntity<Owner>(HttpStatus.NOT_FOUND));
 	}
 
 	private boolean invalidRequest(BindingResult bindingResult, Owner owner) {
@@ -132,12 +130,12 @@ public class OwnerRestController {
 	@RequestMapping(value = "/{ownerId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	@Transactional
 	public ResponseEntity<Void> deleteOwner(@PathVariable("ownerId") int ownerId) {
-		Owner owner = this.ownerService.findOwnerById(ownerId);
-		if (owner == null) {
-			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
-		}
-		this.ownerService.deleteOwner(owner);
-		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+        return this.ownerService.findOwnerById(ownerId)
+            .map(own -> {
+                this.ownerService.deleteOwner(own);
+                return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+            })
+            .orElseGet(() -> new ResponseEntity<Void>(HttpStatus.NOT_FOUND));
 	}
 
 }
