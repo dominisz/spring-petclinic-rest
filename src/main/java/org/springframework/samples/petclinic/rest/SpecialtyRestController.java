@@ -17,17 +17,26 @@
 package org.springframework.samples.petclinic.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.model.Specialty;
 import org.springframework.samples.petclinic.service.SpecialtyService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -48,20 +57,19 @@ public class SpecialtyRestController {
 	@RequestMapping(value = "", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Collection<Specialty>> getAllSpecialtys(){
 
-    Collection<Specialty> specialties = new ArrayList<>(this.specialtyService.findAllSpecialties());
+    Collection<Specialty> specialties = specialtyService.findAllSpecialties();
 
-    return Optional.of(specialties)
-        .map(specs -> new ResponseEntity<>(specs, HttpStatus.OK))
-        .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    return Optional.ofNullable(specialties)
+            .map(specs -> new ResponseEntity<>(specs, HttpStatus.OK))
+            .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "/{specialtyId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Specialty> getSpecialty(@PathVariable("specialtyId") int specialtyId){
-        Optional<Specialty> specialtyOptional = specialtyService.findSpecialtyById(specialtyId);
-        return specialtyOptional
+	public ResponseEntity<?> getSpecialty(@PathVariable("specialtyId") int specialtyId){
+        return specialtyService.findSpecialtyById(specialtyId)
             .map(specialty -> new ResponseEntity<>(specialty, HttpStatus.OK))
-            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+            .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
@@ -94,15 +102,20 @@ public class SpecialtyRestController {
             return new ResponseEntity<>(headers, HttpStatus.BAD_REQUEST);
     return Optional.ofNullable(specialtyService.updateSpeciality(specialtyId, specialty))
         .map(ResponseEntity::ok)
-        .get();
+        .orElse(ResponseEntity.noContent().build());
 	}
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "/{specialtyId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	@Transactional
 	public ResponseEntity<Void> deleteSpecialty(@PathVariable("specialtyId") int specialtyId){
-        specialtyService.deleteSpecialty(specialtyId);
-		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        try {
+            specialtyService.deleteSpecialty(specialtyId);
+            return ResponseEntity.ok().build();
+        } catch (EntityNotFoundException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
 	}
 
 }

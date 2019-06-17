@@ -16,19 +16,7 @@
 
 package org.springframework.samples.petclinic.rest;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +34,23 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test class for {@link SpecialtyRestController}
@@ -108,7 +112,7 @@ public class SpecialtyRestControllerTests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     public void testGetSpecialtyNotFound() throws Exception {
-    	given(this.specialtyService.findSpecialtyById(-1)).willReturn(null);
+    	given(specialtyService.findSpecialtyById(-1)).willReturn(Optional.empty());
         this.mockMvc.perform(get("/api/specialties/-1")
         	.accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -133,7 +137,7 @@ public class SpecialtyRestControllerTests {
     @WithMockUser(roles="VET_ADMIN")
     public void testGetAllSpecialtysNotFound() throws Exception {
     	specialties.clear();
-    	given(this.specialtyService.findAllSpecialties()).willReturn(specialties);
+    	given(specialtyService.findAllSpecialties()).willReturn(null);
         this.mockMvc.perform(get("/api/specialties/")
         	.accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -167,15 +171,18 @@ public class SpecialtyRestControllerTests {
     @Test
     @WithMockUser(roles="VET_ADMIN")
     public void testUpdateSpecialtySuccess() throws Exception {
-    	given(this.specialtyService.findSpecialtyById(2)).willReturn(Optional.ofNullable(specialties.get(1)));
     	Specialty newSpecialty = specialties.get(1);
     	newSpecialty.setName("surgery I");
     	ObjectMapper mapper = new ObjectMapper();
     	String newSpecialtyAsJSON = mapper.writeValueAsString(newSpecialty);
+
+        given(this.specialtyService.findSpecialtyById(2)).willReturn(Optional.of(newSpecialty));
+        when(specialtyService.updateSpeciality(anyInt(), any(Specialty.class))).thenReturn(newSpecialty);
+
     	this.mockMvc.perform(put("/api/specialties/2")
     		.content(newSpecialtyAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(content().contentType("application/json;charset=UTF-8"))
-        	.andExpect(status().isNoContent());
+        	.andExpect(status().isOk());
 
     	this.mockMvc.perform(get("/api/specialties/2")
            	.accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -206,7 +213,7 @@ public class SpecialtyRestControllerTests {
     	given(this.specialtyService.findSpecialtyById(1)).willReturn(Optional.ofNullable(specialties.get(0)));
     	this.mockMvc.perform(delete("/api/specialties/1")
     		.content(newSpecialtyAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
-        	.andExpect(status().isNoContent());
+        	.andExpect(status().isOk());
     }
 
     @Test
@@ -215,7 +222,8 @@ public class SpecialtyRestControllerTests {
     	Specialty newSpecialty = specialties.get(0);
     	ObjectMapper mapper = new ObjectMapper();
     	String newSpecialtyAsJSON = mapper.writeValueAsString(newSpecialty);
-    	given(this.specialtyService.findSpecialtyById(-1)).willReturn(null);
+    	doThrow(EntityNotFoundException.class).when(specialtyService).deleteSpecialty(-1);
+
     	this.mockMvc.perform(delete("/api/specialties/-1")
     		.content(newSpecialtyAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         	.andExpect(status().isNotFound());
