@@ -90,18 +90,11 @@ public class VetRestController {
 		if(bindingResult.hasErrors() || (vet == null)){
             return createVetErrorResponse(bindingResult);
 		}
-		Optional<Vet> optVet = this.vetService.findVetById(vetId);
-		if(!optVet.isPresent()){
-			return new ResponseEntity<Vet>(HttpStatus.NOT_FOUND);
-		}
-		Vet currentVet = optVet.get();
-		currentVet.setFirstName(vet.getFirstName());
-		currentVet.setLastName(vet.getLastName());
-		currentVet.clearSpecialties();
-		for(Specialty spec : vet.getSpecialties()) {
-			currentVet.addSpecialty(spec);
-		}
-		this.vetService.saveVet(currentVet);
+        Optional<Vet> optVet = this.vetService.findVetById(vetId);
+        if(!optVet.isPresent()){
+            return new ResponseEntity<Vet>(HttpStatus.NOT_FOUND);
+        }
+		Vet currentVet = this.vetService.updateVet(vetId, vet);
 		return new ResponseEntity<Vet>(currentVet, HttpStatus.NO_CONTENT);
 	}
 

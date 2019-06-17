@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectRetrievalFailureException;
+import org.springframework.samples.petclinic.model.Specialty;
 import org.springframework.samples.petclinic.model.Vet;
 import org.springframework.samples.petclinic.repository.VetRepository;
 import org.springframework.stereotype.Service;
@@ -47,6 +50,22 @@ public class VetServiceImpl implements VetService {
     public void saveVet(Vet vet) throws DataAccessException {
         vetRepository.save(vet);
     }
+
+    @Override
+    @Transactional
+    public Vet updateVet(int vetId,Vet vet) throws DataAccessException {
+        Vet currentVet = findVetById(vetId).get();
+        currentVet.setFirstName(vet.getFirstName());
+        currentVet.setLastName(vet.getLastName());
+        currentVet.clearSpecialties();
+        for(Specialty spec : vet.getSpecialties()) {
+            currentVet.addSpecialty(spec);
+        }
+        vetRepository.save(currentVet);
+        return currentVet;
+    }
+
+
 
     @Override
     @Transactional

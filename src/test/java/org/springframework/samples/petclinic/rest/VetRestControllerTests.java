@@ -17,6 +17,8 @@
 package org.springframework.samples.petclinic.rest;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -171,6 +173,7 @@ public class VetRestControllerTests {
     @WithMockUser(roles="VET_ADMIN")
     public void testUpdateVetSuccess() throws Exception {
     	given(this.vetService.findVetById(1)).willReturn(Optional.of(vets.get(0)));
+        given(this.vetService.updateVet(eq(1), any())).willReturn(vets.get(0));
     	Vet newVet = vets.get(0);
     	newVet.setFirstName("James");
     	ObjectMapper mapper = new ObjectMapper();

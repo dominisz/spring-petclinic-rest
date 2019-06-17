@@ -12,4 +12,5 @@ public interface VetService {
     Collection<Vet> findAllVets() throws DataAccessException;
     void saveVet(Vet vet) throws DataAccessException;
     void deleteVet(Vet vet) throws DataAccessException;
+    Vet updateVet(int vetId,Vet vet) throws DataAccessException;
 }
