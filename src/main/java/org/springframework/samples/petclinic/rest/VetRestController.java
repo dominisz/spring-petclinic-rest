@@ -29,9 +29,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.model.Specialty;
 import org.springframework.samples.petclinic.model.Vet;
-import org.springframework.samples.petclinic.service.ClinicService;
 import org.springframework.samples.petclinic.service.VetService;
-import org.springframework.samples.petclinic.service.VetServiceImpl;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -79,27 +77,18 @@ public class VetRestController {
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Vet> addVet(@RequestBody @Valid Vet vet, BindingResult bindingResult, UriComponentsBuilder ucBuilder){
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
 		if(bindingResult.hasErrors() || (vet == null)){
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Vet>(headers, HttpStatus.BAD_REQUEST);
+		    return createVetErrorResponse(bindingResult);
 		}
 		this.vetService.saveVet(vet);
-		headers.setLocation(ucBuilder.path("/api/vets/{id}").buildAndExpand(vet.getId()).toUri());
-		return new ResponseEntity<Vet>(vet, headers, HttpStatus.CREATED);
+		return new ResponseEntity<Vet>(vet, createLocationHeader(ucBuilder, vet), HttpStatus.CREATED);
 	}
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "/{vetId}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Vet> updateVet(@PathVariable("vetId") int vetId, @RequestBody @Valid Vet vet, BindingResult bindingResult){
-		BindingErrorsResponse errors = new BindingErrorsResponse();
-		HttpHeaders headers = new HttpHeaders();
 		if(bindingResult.hasErrors() || (vet == null)){
-			errors.addAllErrors(bindingResult);
-			headers.add("errors", errors.toJSON());
-			return new ResponseEntity<Vet>(headers, HttpStatus.BAD_REQUEST);
+            return createVetErrorResponse(bindingResult);
 		}
 		Optional<Vet> optVet = this.vetService.findVetById(vetId);
 		if(!optVet.isPresent()){
@@ -115,6 +104,20 @@ public class VetRestController {
 		this.vetService.saveVet(currentVet);
 		return new ResponseEntity<Vet>(currentVet, HttpStatus.NO_CONTENT);
 	}
+
+    private ResponseEntity<Vet> createVetErrorResponse(BindingResult bindingResult){
+        BindingErrorsResponse errors = new BindingErrorsResponse();
+        HttpHeaders headers = new HttpHeaders();
+        errors.addAllErrors(bindingResult);
+        headers.add("errors", errors.toJSON());
+        return new ResponseEntity<Vet>(headers, HttpStatus.BAD_REQUEST);
+    }
+
+    private HttpHeaders createLocationHeader(UriComponentsBuilder ucBuilder, Vet vet){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ucBuilder.path("/api/vets/{id}").buildAndExpand(vet.getId()).toUri());
+        return headers;
+    }
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "/{vetId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
