@@ -19,6 +19,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.samples.petclinic.model.*;
 
 import java.util.Collection;
+import java.util.Optional;
 
 
 /**
@@ -41,7 +42,7 @@ public interface ClinicService {
 	void deleteOwner(Owner owner) throws DataAccessException;
 	Collection<Owner> findOwnerByLastName(String lastName) throws DataAccessException;
 
-	Specialty findSpecialtyById(int specialtyId);
+	Optional<Specialty> findSpecialtyById(int specialtyId);
 	Collection<Specialty> findAllSpecialties() throws DataAccessException;
 	void saveSpecialty(Specialty specialty) throws DataAccessException;
 	void deleteSpecialty(Specialty specialty) throws DataAccessException;

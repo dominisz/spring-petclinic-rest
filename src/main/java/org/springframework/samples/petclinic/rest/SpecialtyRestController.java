@@ -18,6 +18,7 @@ package org.springframework.samples.petclinic.rest;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -66,11 +67,11 @@ public class SpecialtyRestController {
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "/{specialtyId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Specialty> getSpecialty(@PathVariable("specialtyId") int specialtyId){
-		Specialty specialty = this.clinicService.findSpecialtyById(specialtyId);
-		if(specialty == null){
+		Optional<Specialty> specialty = this.clinicService.findSpecialtyById(specialtyId);
+		if(!specialty.isPresent()){
 			return new ResponseEntity<Specialty>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<Specialty>(specialty, HttpStatus.OK);
+		return new ResponseEntity<Specialty>(specialty.get(), HttpStatus.OK);
 	}
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
@@ -98,24 +99,25 @@ public class SpecialtyRestController {
 			headers.add("errors", errors.toJSON());
 			return new ResponseEntity<Specialty>(headers, HttpStatus.BAD_REQUEST);
 		}
-		Specialty currentSpecialty = this.clinicService.findSpecialtyById(specialtyId);
-		if(currentSpecialty == null){
+		Optional<Specialty> currentSpecialty = this.clinicService.findSpecialtyById(specialtyId);
+		if(!currentSpecialty.isPresent()){
 			return new ResponseEntity<Specialty>(HttpStatus.NOT_FOUND);
 		}
-		currentSpecialty.setName(specialty.getName());
-		this.clinicService.saveSpecialty(currentSpecialty);
-		return new ResponseEntity<Specialty>(currentSpecialty, HttpStatus.NO_CONTENT);
+
+		currentSpecialty.get().setName(specialty.getName());
+		this.clinicService.saveSpecialty(currentSpecialty.get());
+		return new ResponseEntity<Specialty>(currentSpecialty.get(), HttpStatus.NO_CONTENT);
 	}
 
     @PreAuthorize( "hasRole(@roles.VET_ADMIN)" )
 	@RequestMapping(value = "/{specialtyId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	@Transactional
 	public ResponseEntity<Void> deleteSpecialty(@PathVariable("specialtyId") int specialtyId){
-		Specialty specialty = this.clinicService.findSpecialtyById(specialtyId);
-		if(specialty == null){
+		Optional<Specialty> specialty = this.clinicService.findSpecialtyById(specialtyId);
+		if(!specialty.isPresent()){
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
-		this.clinicService.deleteSpecialty(specialty);
+		this.clinicService.deleteSpecialty(specialty.get());
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -316,8 +317,8 @@ public abstract class AbstractClinicServiceTests {
 
     @Test
     public void shouldFindSpecialtyById(){
-    	Specialty specialty = this.clinicService.findSpecialtyById(1);
-    	assertThat(specialty.getName()).isEqualTo("radiology");
+    	Optional<Specialty> specialty = this.clinicService.findSpecialtyById(1);
+    	assertThat(specialty.get().getName()).isEqualTo("radiology");
     }
 
     @Test
@@ -348,28 +349,25 @@ public abstract class AbstractClinicServiceTests {
     @Test
     @Transactional
     public void shouldUpdateSpecialty(){
-    	Specialty specialty = this.clinicService.findSpecialtyById(1);
-    	String oldLastName = specialty.getName();
+    	Optional<Specialty> specialty = this.clinicService.findSpecialtyById(1);
+    	String oldLastName = specialty.get().getName();
         String newLastName = oldLastName + "X";
-        specialty.setName(newLastName);
-        this.clinicService.saveSpecialty(specialty);
+        specialty.get().setName(newLastName);
+        this.clinicService.saveSpecialty(specialty.get());
         specialty = this.clinicService.findSpecialtyById(1);
-        assertThat(specialty.getName()).isEqualTo(newLastName);
+        assertThat(specialty.get().getName()).isEqualTo(newLastName);
     }
 
     @Test
     @Transactional
     public void shouldDeleteSpecialty(){
-    	Specialty specialty = this.clinicService.findSpecialtyById(1);
-        this.clinicService.deleteSpecialty(specialty);
+    	Optional<Specialty> specialty = this.clinicService.findSpecialtyById(1);
+        this.clinicService.deleteSpecialty(specialty.get());
         try {
         	specialty = this.clinicService.findSpecialtyById(1);
 		} catch (Exception e) {
-			specialty = null;
+			specialty = Optional.empty();
 		}
         assertThat(specialty).isNull();
     }
-
-
-
 }

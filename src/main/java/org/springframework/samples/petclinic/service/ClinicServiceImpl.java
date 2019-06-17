@@ -16,7 +16,6 @@
 package org.springframework.samples.petclinic.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.orm.ObjectRetrievalFailureException;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Mostly used as a facade for all Petclinic controllers
@@ -101,13 +101,14 @@ public class ClinicServiceImpl implements ClinicService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Specialty findSpecialtyById(int specialtyId) {
-		Specialty specialty = null;
+	public Optional<Specialty> findSpecialtyById(int specialtyId) {
+		Optional<Specialty> specialty;
+
 		try {
-			specialty = specialtyRepository.findById(specialtyId);
+			specialty = Optional.ofNullable(specialtyRepository.findById(specialtyId));
 		} catch (ObjectRetrievalFailureException|EmptyResultDataAccessException e) {
 		// just ignore not found exceptions for Jdbc/Jpa realization
-			return null;
+			return Optional.empty();
 		}
 		return specialty;
 	}
